@@ -1,0 +1,33 @@
+<html>
+
+	<head>
+		<title>Long Polling Test</title>
+
+		<script src="http://apps.bdimg.com/libs/jquery/2.0.0/jquery.min.js"></script>
+	</head>
+
+	<body>
+
+	</body>
+
+</html>
+<script type="text/javascript">
+	contact();
+
+	function contact() {
+		$.ajax({
+			type: "get",
+			url: "http:127.0.0.1:18442/default?uid=123",
+			success: function(data) {
+				contact();
+				appendText(data);
+			}
+		});
+	}
+
+	function appendText(content) {
+		var text = document.createTextNode(content);
+		document.body.appendChild(text);
+		document.body.appendChild(document.createElement("br"));
+	}
+</script>
