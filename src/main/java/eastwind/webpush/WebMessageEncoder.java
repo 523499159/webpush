@@ -22,10 +22,6 @@ public class WebMessageEncoder extends MessageToMessageEncoder<Object> {
 
 	@Override
 	protected void encode(ChannelHandlerContext ctx, Object msg, List<Object> out) throws Exception {
-		if (msg != null && (msg instanceof HttpMessage || msg instanceof WebSocketFrame)) {
-			ctx.write(msg);
-			return;
-		}
 		Boolean upgraded = ctx.channel().attr(WebPushHandler.UPGRADED).get();
 		if (upgraded == null) {
 			ByteBuf buf = Unpooled.copiedBuffer(msg.toString(), Charset.forName("utf-8"));
@@ -40,4 +36,8 @@ public class WebMessageEncoder extends MessageToMessageEncoder<Object> {
 		}
 	}
 
+	@Override
+	public boolean acceptOutboundMessage(Object msg) throws Exception {
+		return msg != null && !(msg instanceof HttpMessage) && !(msg instanceof WebSocketFrame);
+	}
 }
