@@ -15,6 +15,7 @@ import webrecv.js
 		@Override
 		public String active(SocketAddress remoteAddress, String params) {
 			QueryStringDecoder decoder = new QueryStringDecoder("?" + params);
+			// check and return uid
 			return decoder.parameters().get("uid").get(0);
 		}
 	});
