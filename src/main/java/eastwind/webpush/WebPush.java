@@ -85,7 +85,6 @@ public class WebPush {
 				return decoder.parameters().get("uid").get(0);
 			}
 		});
-		webPush.setTickTime(30);
 		webPush.setPort(18442);
 		webPush.start();
 
