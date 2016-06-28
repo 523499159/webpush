@@ -35,9 +35,12 @@ public class WebPush {
 			@Override
 			public void operationComplete(ChannelFuture future) throws Exception {
 				if (future.isSuccess()) {
-					logger.info("web push server port:{}" , port);
+					logger.info("web push server started");
+					logger.info("port    :{}", port);
+					logger.info("tickTime:{}", tickTime);
+					logger.info("action  :{}", action.getClass().getName());
 				} else {
-					future.cause().printStackTrace();
+					logger.info("web push server start failed", future.cause());
 					System.exit(1);
 				}
 			}
