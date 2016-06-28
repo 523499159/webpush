@@ -6,7 +6,7 @@ import webrecv.js
 
 	var wr = webRecv("127.0.0.1", 18442, "uid=123");
 	wr.on("test", function(data) {
-		appendText(data);
+		// do...
 	});
 	
 # server
