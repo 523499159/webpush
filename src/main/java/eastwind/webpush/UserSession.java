@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import com.google.common.collect.Lists;
 
-public class UserSession {
+class UserSession {
 
 	private String uid;
 	private boolean removed;

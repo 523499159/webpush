@@ -62,7 +62,7 @@ import com.google.common.collect.Lists;
 /**
  * Handles handshakes and messages
  */
-public class WebPushHandler extends SimpleChannelInboundHandler<Object> {
+class WebPushHandler extends SimpleChannelInboundHandler<Object> {
 
 	private static Logger logger = LoggerFactory.getLogger(WebPushHandler.class);
 	

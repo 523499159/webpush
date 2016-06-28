@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.Maps;
 
-public class SessionManager {
+class SessionManager {
 
 	private ConcurrentMap<String, UserSession> userSessions = Maps.newConcurrentMap();
 

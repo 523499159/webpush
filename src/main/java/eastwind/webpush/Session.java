@@ -12,7 +12,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-public class Session {
+class Session {
 
 	public static final int EXPRIRED = 6000;
 	

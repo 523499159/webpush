@@ -1,9 +1,9 @@
 package eastwind.webpush;
 
-public class Message {
+class Message {
 
-	public static Message FORBIDDEN = new Message(true, "FORBIDDEN", null);
-	public static Message PING = new Message(true, "PING", null);
+	static Message FORBIDDEN = new Message(true, "FORBIDDEN", null);
+	static Message PING = new Message(true, "PING", null);
 
 	private boolean sys;
 	private String type;

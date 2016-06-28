@@ -3,7 +3,7 @@ package eastwind.webpush;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 
-public class Stat {
+class Stat {
 
 	public static AttributeKey<Stat> STAT = AttributeKey.valueOf("Stat");
 

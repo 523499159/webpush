@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Sharable
-public class WebMessageEncoder extends MessageToMessageEncoder<Message> {
+class WebMessageEncoder extends MessageToMessageEncoder<Message> {
 
 	private static PingWebSocketFrame PING_FRAME = new PingWebSocketFrame();
 

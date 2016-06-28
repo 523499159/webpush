@@ -44,6 +44,10 @@ public class WebPush {
 		});
 	}
 
+	public boolean isOnline(String uid) {
+		return sessionManager.get(uid) != null;
+	}
+	
 	public void publish(String uid, String type, Object data) {
 		sessionManager.publish(uid, new Message(false, type, data));
 	}

@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  */
-public class WebPushHandlerInitializer extends ChannelInitializer<SocketChannel> {
+class WebPushHandlerInitializer extends ChannelInitializer<SocketChannel> {
 
 	private Action action;
 	private SessionManager sessionManager;

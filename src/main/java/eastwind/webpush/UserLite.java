@@ -3,7 +3,7 @@ package eastwind.webpush;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 
-public class UserLite {
+class UserLite {
 
 	public static AttributeKey<UserLite> USER_LITE = AttributeKey.valueOf("USER_LITE");
 	
