@@ -1,4 +1,25 @@
 # webpush
-Netty单端口同时提供HTTP和websocket推送的例子
+Netty单端口同时提供HTTP和websocket推送功能
 
-启动WebPush,打开long-polling.html或webscoket.html,服务端控制台输入的文本会主动推送至浏览器。
+# client
+import webrecv.js
+
+	var wr = webRecv("127.0.0.1", 18442, "uid=123");
+	wr.on("test", function(data) {
+		appendText(data);
+	});
+	
+# server
+	WebPush webPush = new WebPush();
+	webPush.setAction(new Action() {
+		@Override
+		public String active(SocketAddress remoteAddress, String params) {
+			QueryStringDecoder decoder = new QueryStringDecoder("?" + params);
+			return decoder.parameters().get("uid").get(0);
+		}
+	});
+	webPush.setPort(18442);
+	webPush.start();
+	
+	// send data by json
+	webPush.publish("123", "test", "this is data");

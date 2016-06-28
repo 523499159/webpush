@@ -69,7 +69,7 @@ public class WebPush {
 	}
 
 	/**
-	 * @param tickTime
+	 * @param tickTime 心跳间隔
 	 *            unit:second
 	 */
 	public void setTickTime(int tickTime) {
