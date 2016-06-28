@@ -44,8 +44,8 @@ public class WebPush {
 		});
 	}
 
-	public void publish(String uid, Message message) {
-		sessionManager.publish(uid, message);
+	public void publish(String uid, String type, Object data) {
+		sessionManager.publish(uid, new Message(false, type, data));
 	}
 
 	public Action getAction() {
@@ -92,7 +92,7 @@ public class WebPush {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		for (;;) {
 			br.readLine();
-			webPush.publish("123", new Message(false, "test", "this is data"));
+			webPush.publish("123", "test", "this is data");
 		}
 	}
 }
