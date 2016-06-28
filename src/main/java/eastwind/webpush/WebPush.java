@@ -3,7 +3,6 @@ package eastwind.webpush;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.QueryStringDecoder;
@@ -12,26 +11,31 @@ import io.netty.util.concurrent.GenericFutureListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.SocketAddress;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WebPush {
 
+	private static Logger logger = LoggerFactory.getLogger(WebPush.class);
 	private int port;
+	private int tickTime = 3 * 60;
 	private ServerBootstrap b = new ServerBootstrap();
-	private Upgrader upgrader = null;
-
-	private ChannelManager channelManager = new ChannelManager();
+	private Action action;
+	private SessionManager sessionManager = new SessionManager();
 
 	public void start() {
 		EventLoopGroup bossGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors());
 		EventLoopGroup workerGroup = new NioEventLoopGroup();
 
 		b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class);
-		b.childHandler(new WebPushHandlerInitializer(upgrader, channelManager));
+		b.childHandler(new WebPushHandlerInitializer(action, sessionManager, tickTime * 1000));
 		b.bind(port).addListener(new GenericFutureListener<ChannelFuture>() {
 			@Override
 			public void operationComplete(ChannelFuture future) throws Exception {
 				if (future.isSuccess()) {
-					System.out.println("web push server port:" + port);
+					logger.info("web push server port:{}" , port);
 				} else {
 					future.cause().printStackTrace();
 					System.exit(1);
@@ -40,8 +44,16 @@ public class WebPush {
 		});
 	}
 
-	public void setUpgrader(Upgrader upgrader) {
-		this.upgrader = upgrader;
+	public void publish(String uid, Message message) {
+		sessionManager.publish(uid, message);
+	}
+
+	public Action getAction() {
+		return action;
+	}
+
+	public void setAction(Action action) {
+		this.action = action;
 	}
 
 	public int getPort() {
@@ -52,31 +64,35 @@ public class WebPush {
 		this.port = port;
 	}
 
+	public int getTickTime() {
+		return tickTime;
+	}
+
+	/**
+	 * @param tickTime
+	 *            unit:second
+	 */
+	public void setTickTime(int tickTime) {
+		this.tickTime = tickTime;
+	}
+
 	public static void main(String[] args) throws IOException {
 		WebPush webPush = new WebPush();
-		webPush.setPort(18442);
-		Upgrader upgrader = new Upgrader() {
+		webPush.setAction(new Action() {
 			@Override
-			public Upgrade upgrade(QueryStringDecoder decoder) {
-				Upgrade upgrade = new Upgrade();
-				upgrade.setSuccess(true);
-				upgrade.setGroup(decoder.path());
-				upgrade.setUid(decoder.parameters().get("uid").get(0));
-				return upgrade;
+			public String active(SocketAddress remoteAddress, String params) {
+				QueryStringDecoder decoder = new QueryStringDecoder("?" + params);
+				return decoder.parameters().get("uid").get(0);
 			}
-		};
-		webPush.setUpgrader(upgrader);
+		});
+		webPush.setTickTime(30);
+		webPush.setPort(18442);
 		webPush.start();
 
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		for (;;) {
-			String line = br.readLine();
-			if (line != null && !line.trim().equals("")) {
-				ChannelGroup channelGroup = webPush.channelManager.getGroup("/default");
-				if (channelGroup != null) {
-					channelGroup.writeAndFlush(line);
-				}
-			}
+			br.readLine();
+			webPush.publish("123", new Message(false, "test", "this is data"));
 		}
 	}
 }

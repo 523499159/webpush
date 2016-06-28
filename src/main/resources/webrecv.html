@@ -1,7 +1,7 @@
 <html>
 
 	<head>
-		<title>Long Polling Test</title>
+		<title>Web Socket Test</title>
 
 		<script src="http://apps.bdimg.com/libs/jquery/2.0.0/jquery.min.js"></script>
 	</head>
@@ -127,8 +127,86 @@
 		return wr;
 	}
 
-	var wr = longPollingRecv("127.0.0.1", 18442, "uid=123");
-	wr.on("test", function(data) {
+	function webSocketRecv(ip, port, params) {
+		var wr = {};
+		wr.size = 0;
+		wr.ip = ip;
+		wr.port = port;
+		wr.params = params;
+		wr.socket = null;
+		wr.handlers = {};
+		wr.i = 0;
+		wr.contact = function() {
+			var uri = ["ws://", ip, ":", port, "/?", params].join("");
+			wr.socket = new WebSocket(uri);
+			wr.socket.onmessage = function(event) {
+				var message = JSON.parse(event.data);
+				if (message.sys) {
+					if (message.type == "FORBIDDEN") {
+						wr.socket.close();
+					}
+				} else {
+					var handler = wr.handlers[message.type];
+					if (handler == null) {
+						console.warn("message:" + message.type + " has no handler");
+					} else {
+						handler(message.data);
+					}
+				}
+			};
+			wr.socket.onopen = function() {
+				if (wr.i != 0) {
+					wr.i = 0;
+				}
+				if (wr.size > 0) {
+					var types = [];
+					for (var k in wr.handlers) {
+						types.push(k);
+					}
+					var message = {};
+					message["type"] = "registers";
+					message["data"] = types;
+					console.info("on:" + types.join());
+					wr.socket.send(JSON.stringify(message));
+				}
+			}
+			wr.socket.onclose = function(event) {
+				console.warn("Web Socket closed!");
+				if (wr.i < 10) {
+					wr.i++;
+				}
+				setTimeout(wr.contact, wr.i * 1000);
+			};
+		}
+		wr.on = function(type, handler) {
+			wr.handlers[type] = handler;
+			wr.size++;
+			if (wr.socket.readyState == 1) {
+				var message = {};
+				message["type"] = "register";
+				message["data"] = type;
+				console.info("on:" + type);
+				wr.socket.send(JSON.stringify(message));
+			}
+			return wr;
+		}
+		wr.contact();
+		return wr;
+	}
+
+	function webRecv(ip, port, params) {
+		if (!window.WebSocket) {
+			window.WebSocket = window.MozWebSocket;
+		}
+		if (window.WebSocket) {
+			return webSocketRecv(ip, port, params);
+		} else {
+			return longPollingRecv(ip, port, params);
+		}
+	}
+
+	var wr = webRecv("127.0.0.1", 18442, "uid=123");
+	wr.on("test11", function(data) {
 		appendText(data);
 	});
 </script>
