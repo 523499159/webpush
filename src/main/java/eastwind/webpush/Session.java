@@ -14,7 +14,7 @@ import com.google.common.collect.Sets;
 
 class Session {
 
-	public static final int EXPRIRED = 6000;
+	public static final int EXPRIRED = 12000;
 	
 	private String uid;
 	private String uuid;

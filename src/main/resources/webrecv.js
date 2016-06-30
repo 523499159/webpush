@@ -53,8 +53,11 @@ function longPollingRecv(ip, port, params) {
 			error: function(r, t, e) {
 				wr.ready = false;
 				console.warn("contact:" + r.status + "," + e);
-				if (wr.i < 15) {
-					wr.i++;
+				if (r.status == 403 & wr.i > 0) {
+					wr.i = 30;
+				}
+				if (wr.i < 30) {
+					wr.i += 2;
 				}
 				setTimeout(wr.contact, wr.i * 1000);
 			}
@@ -123,6 +126,9 @@ function webSocketRecv(ip, port, params) {
 			var message = JSON.parse(event.data);
 			if (message.sys) {
 				if (message.type == "FORBIDDEN") {
+					if (wr.i > 0) {
+						wr.i = 30;
+					}
 					wr.socket.close();
 				}
 			} else {
@@ -152,8 +158,8 @@ function webSocketRecv(ip, port, params) {
 		}
 		wr.socket.onclose = function(event) {
 			console.warn("Web Socket closed!");
-			if (wr.i < 10) {
-				wr.i++;
+			if (wr.i < 30) {
+				wr.i += 2;
 			}
 			setTimeout(wr.contact, wr.i * 1000);
 		};
