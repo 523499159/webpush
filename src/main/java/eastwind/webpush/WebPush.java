@@ -40,7 +40,7 @@ public class WebPush {
 					logger.info("tickTime:{}", tickTime);
 					logger.info("action  :{}", action.getClass().getName());
 				} else {
-					logger.info("web push server start failed", future.cause());
+					logger.warn("web push server start failed", future.cause());
 					System.exit(1);
 				}
 			}
