@@ -1,5 +1,5 @@
 # webpush
-Netty单端口同时提供HTTP和websocket推送功能
+Netty单端口同时提供HTTP和Websocket推送功能
 
 # client
 import webrecv.js
