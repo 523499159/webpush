@@ -65,7 +65,7 @@ import com.google.common.collect.Lists;
 class WebPushHandler extends SimpleChannelInboundHandler<Object> {
 
 	private static Logger logger = LoggerFactory.getLogger(WebPushHandler.class);
-	
+
 	private SessionManager sessionManager;
 
 	private Action action;
@@ -167,7 +167,15 @@ class WebPushHandler extends SimpleChannelInboundHandler<Object> {
 					params = uri.substring(q + 1);
 				}
 			}
-			uid = action.active(channel.remoteAddress(), params);
+			try {
+				uid = action.active(channel.remoteAddress(), params);
+			} catch (Throwable th) {
+				logger.warn("active:", th);
+				sendHttpResponse(ctx, req,
+						new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR,
+								Unpooled.copiedBuffer(th.getClass().getName(), Charset.forName("utf-8"))));
+				return;
+			}
 			if (uid != null) {
 				uuid = sessionManager.create(uid).getUuid();
 				logger.info("active:{}-{}", uid, uuid);

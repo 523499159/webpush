@@ -53,7 +53,7 @@ function longPollingRecv(ip, port, params) {
 			error: function(r, t, e) {
 				wr.ready = false;
 				console.warn("contact:" + r.status + "," + e);
-				if (r.status == 403 & wr.i > 0) {
+				if ((r.status == 403 || r.status == 500) & wr.i > 0) {
 					wr.i = 30;
 				}
 				if (wr.i < 30) {
