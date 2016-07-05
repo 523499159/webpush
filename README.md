@@ -24,3 +24,17 @@ import webrecv.js
 	
 	// send data by json
 	webPush.publish("123", "test", "this is data");
+
+# maven
+	<repositories>
+		<repository>
+			<id>maven-repository</id>
+			<url>https://raw.github.com/breeze-hj/webpush-repo/master</url>
+		</repository>
+	</repositories>
+	
+	<dependency>
+		<groupId>eastwind</groupId>
+		<artifactId>webpush</artifactId>
+		<version>1.0.0-ALPHA</version>
+	</dependency>
