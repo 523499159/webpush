@@ -20,7 +20,7 @@ public class WebPush {
 
 	private static Logger logger = LoggerFactory.getLogger(WebPush.class);
 	private int port;
-	private int tickTime = 3 * 60;
+	private int tickTime = 2 * 60;
 	private ServerBootstrap b = new ServerBootstrap();
 	private Action action;
 	private SessionManager sessionManager = new SessionManager();
