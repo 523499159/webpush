@@ -30,11 +30,14 @@ import webrecv.js
 		<repository>
 			<id>maven-repository</id>
 			<url>https://raw.github.com/breeze-hj/webpush-repo/master</url>
+			<snapshots>
+				<updatePolicy>always</updatePolicy>
+			</snapshots>
 		</repository>
 	</repositories>
 	
 	<dependency>
 		<groupId>eastwind</groupId>
 		<artifactId>webpush</artifactId>
-		<version>1.0.0-ALPHA</version>
+		<version>1.0.0-SNAPSHOT</version>
 	</dependency>
