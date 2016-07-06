@@ -30,9 +30,6 @@ import webrecv.js
 		<repository>
 			<id>maven-repository</id>
 			<url>https://raw.github.com/breeze-hj/webpush-repo/master</url>
-			<snapshots>
-				<updatePolicy>always</updatePolicy>
-			</snapshots>
 		</repository>
 	</repositories>
 	
