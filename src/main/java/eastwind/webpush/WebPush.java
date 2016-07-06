@@ -3,6 +3,7 @@ package eastwind.webpush;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.ServerChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.QueryStringDecoder;
@@ -11,6 +12,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 import org.slf4j.Logger;
@@ -35,6 +37,10 @@ public class WebPush {
 			@Override
 			public void operationComplete(ChannelFuture future) throws Exception {
 				if (future.isSuccess()) {
+					if (port == 0) {
+						InetSocketAddress add = (InetSocketAddress) ((ServerChannel)future.channel()).localAddress();
+						port = add.getPort();
+					}
 					logger.info("web push server started");
 					logger.info("port    :{}", port);
 					logger.info("tickTime:{}", tickTime);
@@ -92,7 +98,7 @@ public class WebPush {
 				return decoder.parameters().get("uid").get(0);
 			}
 		});
-		webPush.setPort(18442);
+//		webPush.setPort(18442);
 		webPush.start();
 
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
