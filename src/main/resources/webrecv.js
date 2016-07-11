@@ -176,6 +176,7 @@ function webSocketRecv(ip, port, params) {
 		}
 		return wr;
 	}
+	wr.contact();
 	return wr;
 }
 
