@@ -1,11 +1,9 @@
 function longPollingRecv(ip, port, params) {
 	var wr = {};
-	wr.size = 0;
 	wr.ip = ip;
 	wr.port = port;
 	wr.ready = false;
 	wr.params = params;
-	wr.size = 0;
 	wr.handlers = {};
 	wr.i = 0;
 	wr.uid = null;
@@ -89,7 +87,6 @@ function longPollingRecv(ip, port, params) {
 	wr.on = function(type, handler) {
 		console.info("on:" + type);
 		wr.handlers[type] = handler;
-		wr.size++;
 		var uri = [wr.baseUri(), "/register?type=", type].join("");
 		if (wr.ready) {
 			$.ajax({
@@ -112,7 +109,6 @@ function longPollingRecv(ip, port, params) {
 
 function webSocketRecv(ip, port, params) {
 	var wr = {};
-	wr.size = 0;
 	wr.ip = ip;
 	wr.port = port;
 	wr.params = params;
@@ -144,17 +140,15 @@ function webSocketRecv(ip, port, params) {
 			if (wr.i != 0) {
 				wr.i = 0;
 			}
-			if (wr.size > 0) {
-				var types = [];
-				for (var k in wr.handlers) {
-					types.push(k);
-				}
-				var message = {};
-				message["type"] = "registers";
-				message["data"] = types;
-				console.info("on:" + types.join());
-				wr.socket.send(JSON.stringify(message));
+			var types = [];
+			for (var k in wr.handlers) {
+				types.push(k);
 			}
+			var message = {};
+			message["type"] = "registers";
+			message["data"] = types;
+			console.info("on:" + types.join());
+			wr.socket.send(JSON.stringify(message));
 		}
 		wr.socket.onclose = function(event) {
 			console.warn("Web Socket closed!");
@@ -166,7 +160,6 @@ function webSocketRecv(ip, port, params) {
 	}
 	wr.on = function(type, handler) {
 		wr.handlers[type] = handler;
-		wr.size++;
 		if (wr.socket.readyState == 1) {
 			var message = {};
 			message["type"] = "register";

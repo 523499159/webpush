@@ -87,9 +87,16 @@ class WebPushHandler extends SimpleChannelInboundHandler<Object> {
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+		logger.info("---------- channel actived:{}", ctx.channel());
 		ChannelPinger cp = new ChannelPinger(ctx.channel());
 		timer.newTimeout(cp, tickTime, TimeUnit.MILLISECONDS);
 		super.channelActive(ctx);
+	}
+
+	@Override
+	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		logger.info("xxxxxxxxxx channel inactived:{}", ctx.channel());
+		super.channelInactive(ctx);
 	}
 
 	@Override
