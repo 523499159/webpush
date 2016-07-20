@@ -100,9 +100,14 @@ function longPollingRecv(ip, port, params) {
 		}
 		return wr;
 	}
+	wr.cancel = function() {
+		var url = [wr.baseUri(), "/", "cancel"].join("");
+		$.ajax(url);
+	}
 	wr.baseUri = function() {
 		return ["http://", ip, ":", port, "/", wr.uid, "/", wr.uuid].join("");
 	}
+	$(window).bind("beforeunload", wr.cancel);
 	wr.contact();
 	return wr;
 }
@@ -129,9 +134,7 @@ function webSocketRecv(ip, port, params) {
 				}
 			} else {
 				var handler = wr.handlers[message.type];
-				if (handler == null) {
-					console.warn("message:" + message.type + " has no handler");
-				} else {
+				if (handler != null) {
 					handler(message.data);
 				}
 			}
@@ -169,6 +172,12 @@ function webSocketRecv(ip, port, params) {
 		}
 		return wr;
 	}
+	wr.cancel = function() {
+		if (wr.socket.readyState == 1) {
+			wr.socket.send("{'type' : 'cancel'}");
+		}
+	}
+	$(window).bind("beforeunload", wr.cancel);
 	wr.contact();
 	return wr;
 }

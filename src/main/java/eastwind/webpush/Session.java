@@ -17,6 +17,7 @@ class Session {
 	public static final int EXPRIRED = 12000;
 	
 	private String uid;
+	private boolean canceled;
 	private String uuid;
 	private long lastClose = -1;
 	private Set<String> types = Sets.newHashSet();
@@ -93,6 +94,14 @@ class Session {
 				break;
 			}
 		}
+	}
+
+	public boolean isCanceled() {
+		return canceled;
+	}
+
+	public void setCanceled() {
+		this.canceled = true;
 	}
 
 	private void send(final Message message) {

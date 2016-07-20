@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -74,8 +75,8 @@ class WebMessageEncoder extends MessageToMessageEncoder<Message> {
 		} else {
 			FullHttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
 			res.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/json; charset=UTF-8");
-			res.headers().set(HttpHeaderNames.CONTENT_LENGTH, buf.readableBytes());
 			res.headers().set(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+			HttpUtil.setContentLength(res, res.content().readableBytes());
 			out.add(res);
 		}
 	}

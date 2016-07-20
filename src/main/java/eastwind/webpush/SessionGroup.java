@@ -6,21 +6,29 @@ import java.util.UUID;
 
 import com.google.common.collect.Lists;
 
-class UserSession {
+class SessionGroup {
 
 	private String uid;
 	private boolean removed;
 	private List<Session> sessions = Lists.newArrayList();
-
-	public UserSession(String uid) {
+	private long lastClean = System.currentTimeMillis();
+	
+	public SessionGroup(String uid) {
 		this.uid = uid;
 	}
-
+	
 	public String getUid() {
 		return uid;
 	}
-
+	
+	public synchronized void remove(Session session) {
+		sessions.remove(session);
+	}
+	
 	public synchronized Session newSession() {
+		if (sessions.size() > 10 && System.currentTimeMillis() - lastClean > 30000) {
+			clean();
+		}
 		String uuid = UUID.randomUUID().toString().replaceAll("-", "");
 		Session s = new Session(uid, uuid);
 		sessions.add(s);
@@ -29,10 +37,10 @@ class UserSession {
 
 	public synchronized void clean() {
 		Iterator<Session> it = sessions.iterator();
-		long now = System.currentTimeMillis();
+		long lastClean = System.currentTimeMillis();
 		while (it.hasNext()) {
 			Session s = it.next();
-			if (s.getLastClose() != -1 && now - s.getLastClose() > 60000) {
+			if (s.getLastClose() != -1 && lastClean - s.getLastClose() > 30000) {
 				it.remove();
 			} else {
 				s.tryCleanMessage();
@@ -51,7 +59,9 @@ class UserSession {
 
 	public synchronized void publish(Message message) {
 		for (Session s : sessions) {
-			s.trySendMessage(message);
+			if (!s.isCanceled()) {
+				s.trySendMessage(message);
+			}
 		}
 	}
 	

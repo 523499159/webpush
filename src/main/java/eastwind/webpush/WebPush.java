@@ -98,7 +98,7 @@ public class WebPush {
 				return decoder.parameters().get("uid").get(0);
 			}
 		});
-//		webPush.setPort(18442);
+		webPush.setPort(18442);
 		webPush.start();
 
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));

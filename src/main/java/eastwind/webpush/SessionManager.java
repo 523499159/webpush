@@ -6,13 +6,13 @@ import com.google.common.collect.Maps;
 
 class SessionManager {
 
-	private ConcurrentMap<String, UserSession> userSessions = Maps.newConcurrentMap();
+	private ConcurrentMap<String, SessionGroup> sessionGroups = Maps.newConcurrentMap();
 
 	public Session create(String uid) {
-		UserSession us = userSessions.get(uid);
+		SessionGroup us = sessionGroups.get(uid);
 		if (us == null) {
-			us = new UserSession(uid);
-			UserSession absent = userSessions.putIfAbsent(uid, us);
+			us = new SessionGroup(uid);
+			SessionGroup absent = sessionGroups.putIfAbsent(uid, us);
 			if (absent != null) {
 				us = absent;
 			}
@@ -20,9 +20,9 @@ class SessionManager {
 		} else {
 			Session s = us.newSession();
 			if (us.isRemoved()) {
-				userSessions.remove(us.getUid(), us);
-				us = new UserSession(uid);
-				UserSession absent = userSessions.putIfAbsent(uid, us);
+				sessionGroups.remove(us.getUid(), us);
+				us = new SessionGroup(uid);
+				SessionGroup absent = sessionGroups.putIfAbsent(uid, us);
 				if (absent != null) {
 					us = absent;
 				}
@@ -32,23 +32,23 @@ class SessionManager {
 		}
 	}
 
-	public UserSession get(String uid) {
-		return userSessions.get(uid);
+	public SessionGroup get(String uid) {
+		return sessionGroups.get(uid);
 	}
 
-	public void remove(UserSession userSession) {
-		userSessions.remove(userSession.getUid(), userSession);
+	public void remove(SessionGroup sessionGroup) {
+		sessionGroups.remove(sessionGroup.getUid(), sessionGroup);
 	}
 
 	public Session get(String uid, String uuid) {
-		UserSession us = userSessions.get(uid);
-		return us == null ? null : us.getSession(uuid);
+		SessionGroup sg = sessionGroups.get(uid);
+		return sg == null ? null : sg.getSession(uuid);
 	}
 
 	public void publish(String uid, Message message) {
-		UserSession us = userSessions.get(uid);
-		if (us != null) {
-			us.publish(message);
+		SessionGroup sg = sessionGroups.get(uid);
+		if (sg != null) {
+			sg.publish(message);
 		}
 	}
 }

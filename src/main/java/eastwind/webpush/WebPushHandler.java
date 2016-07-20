@@ -54,7 +54,9 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -87,16 +89,9 @@ class WebPushHandler extends SimpleChannelInboundHandler<Object> {
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		logger.info("---------- channel actived:{}", ctx.channel());
 		ChannelPinger cp = new ChannelPinger(ctx.channel());
 		timer.newTimeout(cp, tickTime, TimeUnit.MILLISECONDS);
 		super.channelActive(ctx);
-	}
-
-	@Override
-	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		logger.info("xxxxxxxxxx channel inactived:{}", ctx.channel());
-		super.channelInactive(ctx);
 	}
 
 	@Override
@@ -146,25 +141,7 @@ class WebPushHandler extends SimpleChannelInboundHandler<Object> {
 				s.trySendMessages();
 			} else {
 				String oper = l.get(2);
-				if (oper.equals("register")) {
-					QueryStringDecoder decoder = new QueryStringDecoder(req.uri());
-					List<String> types = decoder.parameters().get("type");
-					if (types != null && types.size() > 0) {
-						s.registerType(types.get(0));
-						logger.debug("{} register {}", uid, types.get(0));
-					}
-					sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK,
-							Unpooled.copiedBuffer("{}", Charset.forName("utf-8"))));
-				} else if (oper.equals("registers")) {
-					QueryStringDecoder decoder = new QueryStringDecoder(req.uri());
-					List<String> types = decoder.parameters().get("type");
-					if (types != null) {
-						logger.debug("{} registers {}", uid, objectMapper.writeValueAsString(types));
-						s.registerTypes(types);
-					}
-					sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK,
-							Unpooled.copiedBuffer("{}", Charset.forName("utf-8"))));
-				}
+				handleHttpOper(ctx, req, s, oper);
 			}
 		} else {
 			String params = "";
@@ -186,8 +163,8 @@ class WebPushHandler extends SimpleChannelInboundHandler<Object> {
 			if (uid != null) {
 				uuid = sessionManager.create(uid).getUuid();
 				logger.info("active:{}-{}", uid, uuid);
-				UserSession us = sessionManager.get(uid);
-				timer.newTimeout(new UserSessionCleaner(us), lost, TimeUnit.MILLISECONDS);
+				SessionGroup sg = sessionManager.get(uid);
+				timer.newTimeout(new SessionCleaner(sg), lost, TimeUnit.MILLISECONDS);
 			}
 
 			// websocket
@@ -212,7 +189,34 @@ class WebPushHandler extends SimpleChannelInboundHandler<Object> {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	private void handleHttpOper(ChannelHandlerContext ctx, FullHttpRequest req, Session s, String oper)
+			throws JsonProcessingException {
+		String uid = s.getUid();
+		if (oper.equals("registers")) {
+			QueryStringDecoder decoder = new QueryStringDecoder(req.uri());
+			List<String> types = decoder.parameters().get("type");
+			s.registerTypes(types);
+			if (types != null) {
+				logger.debug("registers:{}-{}", uid, objectMapper.writeValueAsString(types));
+			}
+			sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK,
+					Unpooled.copiedBuffer("{}", Charset.forName("utf-8"))));
+		} else if (oper.equals("register")) {
+			QueryStringDecoder decoder = new QueryStringDecoder(req.uri());
+			List<String> types = decoder.parameters().get("type");
+			if (types != null && types.size() > 0) {
+				s.registerType(types.get(0));
+				logger.debug("register:{}-{}", uid, types.get(0));
+			}
+			sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK,
+					Unpooled.copiedBuffer("{}", Charset.forName("utf-8"))));
+		} else if (oper.equals("cancel")) {
+			s.setCanceled();
+			sessionManager.get(uid).remove(s);
+			logger.debug("cancel:{}-{}", uid, s.getUuid());
+		}
+	}
+
 	private void handleWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
 		// Check for closing frame
 		Channel channel = ctx.channel();
@@ -239,23 +243,34 @@ class WebPushHandler extends SimpleChannelInboundHandler<Object> {
 			TextWebSocketFrame tf = (TextWebSocketFrame) frame;
 			ByteBufInputStream is = new ByteBufInputStream(tf.content());
 			try {
-				Message message = objectMapper.readValue(is, Message.class);
-				Object data = message.getData();
-				if (message.getType().equals("registers")) {
-					s.registerTypes((Collection<String>) data);
-					s.trySendMessages();
-					s.setChannel(channel);
-					logger.debug("{} registers {}", u.uid, objectMapper.writeValueAsString(data));
-				} else if (message.getType().equals("register")) {
-					if (data != null) {
-						s.registerType((String) data);
-						logger.debug("{} register {}", u.uid, data);
-					}
-				}
+				handleWsOper(channel, u, s, is);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void handleWsOper(Channel channel, UserLite u, Session s, ByteBufInputStream is) throws IOException,
+			JsonParseException, JsonMappingException, JsonProcessingException {
+		Message message = objectMapper.readValue(is, Message.class);
+		Object data = message.getData();
+		String type = message.getType();
+		if (type.equals("registers")) {
+			s.registerTypes((Collection<String>) data);
+			s.setChannel(channel);
+			s.trySendMessages();
+			logger.debug("registers:{}-{}", u.uid, objectMapper.writeValueAsString(data));
+		} else if (type.equals("register")) {
+			if (data != null) {
+				s.registerType((String) data);
+				logger.debug("register:{}-{}", u.uid, data);
+			}
+		} else if (type.equals("cancel")) {
+			logger.debug("cancel:{}-{}", u.uid, u.uuid);
+			s.setCanceled();
+			sessionManager.get(u.getUid()).remove(s);
 		}
 	}
 
@@ -323,25 +338,25 @@ class WebPushHandler extends SimpleChannelInboundHandler<Object> {
 		}
 	}
 
-	private class UserSessionCleaner implements TimerTask {
+	private class SessionCleaner implements TimerTask {
 
-		private UserSession us;
+		private SessionGroup sg;
 
-		public UserSessionCleaner(UserSession us) {
-			this.us = us;
+		public SessionCleaner(SessionGroup sg) {
+			this.sg = sg;
 		}
 
 		@Override
 		public void run(Timeout timeout) throws Exception {
-			us.clean();
-			if (us.size() == 0) {
-				logger.info("clean:{}", us.getUid());
-				us.setRemoved(true);
-				if (us.size() == 0) {
-					sessionManager.remove(us);
+			sg.clean();
+			if (sg.size() == 0) {
+				logger.info("clean:{}", sg.getUid());
+				sg.setRemoved(true);
+				if (sg.size() == 0) {
+					sessionManager.remove(sg);
 					return;
 				} else {
-					us.setRemoved(false);
+					sg.setRemoved(false);
 				}
 			}
 			timer.newTimeout(this, lost, TimeUnit.MILLISECONDS);

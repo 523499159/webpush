@@ -40,9 +40,7 @@
 					}
 				} else {
 					var handler = wr.handlers[message.type];
-					if (handler == null) {
-						console.warn("message:" + message.type + " has no handler");
-					} else {
+					if (handler != null) {
 						handler(message.data);
 					}
 				}
@@ -80,6 +78,13 @@
 			}
 			return wr;
 		}
+		wr.cancel = function() {
+			if (wr.socket.readyState == 1) {
+				wr.socket.send("{'type' : 'cancel'}");
+			}
+		}
+		$(window).bind("beforeunload", wr.cancel);
+		wr.contact();
 		return wr;
 	}
 
