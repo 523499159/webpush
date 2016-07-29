@@ -26,8 +26,13 @@ public class WebPush {
 	private ServerBootstrap b = new ServerBootstrap();
 	private Action action;
 	private SessionManager sessionManager = new SessionManager();
-
+	private volatile  boolean started;
+	
 	public void start() {
+		started = true;
+		if (action == null) {
+			throw new RuntimeException("the action of webpush should configured.");
+		}
 		EventLoopGroup bossGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors());
 		EventLoopGroup workerGroup = new NioEventLoopGroup();
 
@@ -54,10 +59,12 @@ public class WebPush {
 	}
 
 	public boolean isOnline(String uid) {
+		checkStart();
 		return sessionManager.get(uid) != null;
 	}
 	
 	public void publish(String uid, String type, Object data) {
+		checkStart();
 		sessionManager.publish(uid, new Message(false, type, data));
 	}
 
@@ -89,6 +96,12 @@ public class WebPush {
 		this.tickTime = tickTime;
 	}
 
+	private void checkStart() {
+		if (!started) {
+			start();
+		}
+	}
+	
 	public static void main(String[] args) throws IOException {
 		WebPush webPush = new WebPush();
 		webPush.setAction(new Action() {
