@@ -28,7 +28,7 @@ import webrecv.js
 # maven
 	<repositories>
 		<repository>
-			<id>maven-repository</id>
+			<id>webpush-repository</id>
 			<url>https://raw.github.com/breeze-hj/webpush-repo/master</url>
 		</repository>
 	</repositories>
